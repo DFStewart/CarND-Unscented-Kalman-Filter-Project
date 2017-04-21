@@ -33,7 +33,10 @@ public:
   MatrixXd Xsig_pred_;
 
   ///* time when the state is true, in us
-  long long time_us_;
+  long long time_;
+
+  ///*Previous timestamp
+  long long prev_time_;
 
   ///* Process noise standard deviation longitudinal acceleration in m/s^2
   double std_a_;
@@ -69,10 +72,12 @@ public:
   double lambda_;
 
   ///* the current NIS for radar
-  double NIS_radar_;
+  float NIS_radar_;
 
   ///* the current NIS for laser
   double NIS_laser_;
+
+  Tools tools;
 
   /**
    * Constructor
@@ -108,6 +113,48 @@ public:
    * @param meas_package The measurement at k+1
    */
   void UpdateRadar(MeasurementPackage meas_package);
+
+  /**
+   * Perform the measurement update and update the state and covariance update with the measurement
+   * @param n_z    measurement state size
+   * @param Zsig Z sigma points measurement state vector
+   * @param z_pred predicted measurement state vector
+   * @param S      measurement covariance matrix "S" output
+   * @param z      raw measurement vector
+   */
+  void UpdateState(int n_z, MatrixXd &Zsig, VectorXd &z_pred, MatrixXd &S, VectorXd &z);
+
+  /**
+   * Computes the augmented sigma points
+   * @param Xsig_out  augmented state
+   */
+  void AugmentedSigmaPoints(MatrixXd* Xsig_out);
+
+  /**
+   * Compute the predicted state mean and covariance using the sigma points
+   * @param return_x predicted state mean output
+   * @param return_P predicted covariance matrix output
+   */
+  void PredictMeanAndCovariance(VectorXd* return_x, MatrixXd* return_P);
+
+  /**
+   * Inserts every augmented sigma point into process model
+   * @param Xsig_    aug augmented state vector input from AugmentedSigmaPoints()
+   * @param delta_t  delta time
+   * @param Xsig_out state vector output
+   */
+  void SigmaPointPrediction(MatrixXd &Xsig_aug, double delta_t, MatrixXd* Xsig_out);
+
+  /**
+   * Compute the mean measurement state vector z and measurement covariance matrix s
+   * @param n_z      measurement state size
+   * @param Zsig     Z sigma points state vector input
+   * @param R        measurement noise matrix input
+   * @param return_z mean measurement state vector "z" output
+   * @param return_S measurement covariance matrix "S" output
+   */
+  void PredictMeas(int n_z, MatrixXd &Zsig, MatrixXd &R, VectorXd* z_out, MatrixXd* S_out);
+
 };
 
 #endif /* UKF_H */
